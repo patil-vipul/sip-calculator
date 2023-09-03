@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <style>
+        .calculator-wrapper {
+            padding: 1.25rem;
+            padding-top: 1.75rem;
+            border-radius: 0.5rem;
+            border-width: 1px;
+            width: 100%;
+            background-color: #ffffff;
+        }
+
+        .tab-button {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            margin-right: 0.625rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            color: #44403c;
+        }
+        .tab-button-selected{
+            color: #10b981 !important; 
+            background-color: #d1fae5; 
+        }
+        .input{
+            outline-style: none; 
+width: 100%; 
+font-size: 1.125rem;
+line-height: 1.75rem; 
+line-height: 1.25rem; 
+text-align: right; 
+background-color: transparent; 
+
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="w-full flex justify-center">
+        <div id="app" class="calculator-wrapper" style="max-width: 700px;">
+            <div>
+                <button class="tab-button" :class="{'tab-button-selected':investmentType==='sip'}"  @click="setInvestmentType('sip')"
+                    
+                    >SIP</button>
+                <button  class="tab-button" :class="{'tab-button-selected':investmentType==='lumpsum'}" @click="setInvestmentType('lumpsum')"
+                   
+                    >Lumpsum</button>
+            </div>
+            <div class="lg:flex mt-7 ">
+                <div class="w-full mr-5">
+                    <div v-if="investmentType==='sip'" class="mb-8">
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-700">Monthly Investment</span>
+                            <div
+                                class="bg-emerald-100 w-28 inline flex items-center text-emerald-500 font-medium p-1 px-2">
+                                <span class="text-lg leading-5 ">₹</span>
+                                <input v-model="investmentData.amount"
+                                    class="text-lg leading-5 bg-transparent w-full outline-none text-right"
+                                    @input="calculate" />
+                            </div>
+                        </div>
+                        <div class="mt-5">
+                            <input @input="calculate" type="range" min="500" max="100000"
+                                v-model="investmentData.amount"
+                                class="w-full h-1 mb-6 bg-emerald-500 rounded-lg appearance-none cursor-pointer range-sm accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg  [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full ">
+                        </div>
+                    </div>
+
+                    <div v-if="investmentType==='lumpsum'" class="mb-8">
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-700">Total Investment</span>
+                            <div
+                                class="bg-emerald-100 w-28 inline flex items-center text-emerald-500 font-medium p-1 px-2">
+                                <span class="text-lg leading-5 ">$</span>
+                                <input v-model="investmentData.amount"
+                                    class="text-lg leading-5 bg-transparent w-full outline-none text-right"
+                                    @input="calculate" />
+                            </div>
+                        </div>
+                        <div class="mt-5">
+                            <input @input="calculate" type="range" min="500" max="1000000"
+                                v-model="investmentData.amount" id="small-range"
+                                class="w-full h-1 mb-6 bg-emerald-500 rounded-lg appearance-none cursor-pointer range-sm accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg  [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2">
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-700">Expected return rate (p.a)</span>
+                            <div
+                                class="bg-emerald-100 w-28 inline flex items-center text-emerald-500 font-medium p-1 px-2">
+
+                                <input v-model="investmentData.rate"
+                                    class="range text-lg leading-5 bg-transparent w-full outline-none text-right"
+                                    @input="calculate" />
+                                <span class="text-lg leading-5 ">%</span>
+                            </div>
+                        </div>
+                        <div class="mt-5">
+                            <input @input="calculate" type="range" min="1" max="30" v-model="investmentData.rate"
+                                class="w-full h-1 mb-6 bg-emerald-500 rounded-lg appearance-none cursor-pointer range-sm accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg  [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2">
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between">
+                            <span class="text-stone-700">Time period</span>
+                            <div
+                                class="bg-emerald-100 w-28 inline flex items-center text-emerald-500 font-medium p-1 px-2">
+
+                                <input v-model="investmentData.period"
+                                    class="text-lg leading-5 bg-transparent w-full outline-none text-right"
+                                    @input="calculate" />
+                                <span class="text-lg leading-5 ">Yr</span>
+                            </div>
+                        </div>
+                        <div class="mt-5">
+                            <input @input="calculate" type="range" min="1" max="40" v-model="investmentData.period"
+                                class="w-full h-1 mb-6 bg-emerald-500 rounded-lg appearance-none cursor-pointer range-sm accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg  [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full ">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-5">
+                            <p class="text-stone-500">Invested Amount</p>
+                            <p class="text-stone-700 font-medium">₹{{maturityData.investedAmount}}</p>
+                        </div>
+                        <div class="flex justify-between mb-5">
+                            <p class="text-stone-500">Est. Returns</p>
+                            <p class="text-stone-700 font-medium">₹{{maturityData.estimatedReturn}}</p>
+                        </div>
+                        <div class="flex justify-between mb-5">
+                            <p class="text-stone-500">Total Value</p>
+                            <p class="text-stone-700 font-medium">₹{{maturityData.totalValue}}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative" >
+                    <div class="flex justify-center">
+                        <div style="width: 220px;" >
+                            <canvas id="chartCanvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="lg:absolute bottom-0 w-full flex justify-center">
+                        <button class="bg-emerald-500 lg:mb-12  font-medium rounded px-6 py-2.5 text-white">INVEST
+                            NOW</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    
+    const { createApp, ref, onMounted, reactive } = Vue
+    createApp({
+        setup() {
+            var chartData = {
+                labels: ['Invested amount', 'Est. returns'],
+                datasets: [{
+                    data: [3000000, 2808477],
+                    backgroundColor: ['#98A4FF', '#5367FF'],
+                }]
+            };
+            var chart = null;
+
+            const investmentType = ref('sip')
+            const investmentData = reactive({
+                amount: 25000,
+                rate: 12,
+                period: 10
+            })
+            const maturityData = reactive({
+                investedAmount: '30,00,000',
+                estimatedReturn: '28,08,477',
+                totalValue: '58,08,477',
+            })
+
+            onMounted(() => {
+                const ctx = document.getElementById('chartCanvas')
+                chart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: chartData,
+                    options: {
+                        cutout: 70,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'rectRounded'
+                                },
+                            }
+                        },
+                        events: [],
+                        maintainAspectRatio: false,
+                        elements: {
+                            arc: {
+                                borderColor: '',
+                                borderWidth: 0,
+                            }
+                        }
+                    }
+                });
+            })
+
+            function calculate() {
+                var amt = investmentData.amount
+                var r = investmentData.rate
+                var y = investmentData.period
+                var invested;
+                var total;
+
+                if (investmentType.value === "sip") {
+                    invested = calculateInvestedAmountForSIP(amt, y)
+                    total = calculateTotalInvestmentValueForSIP(amt, r, y);
+                }
+
+                if (investmentType.value === 'lumpsum') {
+                    invested = amt
+                    total = calculateTotalInvestmentValueForLumpsum(amt, r, y);
+                }
+
+                var estimated = calculateEstimatedReturns(invested, total)
+                updateChart(invested, estimated)
+                maturityData.investedAmount = invested.toLocaleString()
+                maturityData.estimatedReturn = estimated.toLocaleString()
+                maturityData.totalValue = total.toLocaleString()
+            }
+
+            function updateChart(invested, estimated) {
+                chartData.datasets[0].data[0] = invested
+                chartData.datasets[0].data[1] = estimated
+                chart.update()
+            }
+
+            function calculateEstimatedReturns(invested, total) {
+                return total - invested
+            }
+
+            function calculateTotalInvestmentValueForSIP(inv, rate, years) {
+                var n = 12
+                var a = inv * ((Math.pow((1 + rate / 100 / n), (n * years)) - 1) / (rate / 100 / n)) * (1 + rate / 100 / n)
+                return Math.round(a)
+            }
+
+            function calculateTotalInvestmentValueForLumpsum(inv, rate, years) {
+                var a = inv * (Math.pow((1 + rate / 100), years));
+                return Math.round(a)
+            }
+
+            function calculateInvestedAmountForSIP(amount, years) {
+                return amount * 12 * years
+            }
+
+            function setInvestmentType(type){
+                investmentType.value = type
+                calculate();
+            }
+
+            return {
+                calculate,
+                maturityData,
+                investmentData,
+                investmentType,
+                setInvestmentType
+            }
+        }
+    }).mount('#app')
+
+</script>
+<style>
+
+</style>
+
+</html>
